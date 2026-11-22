@@ -46,7 +46,9 @@ public class MarketScenarioFactory {
                     "produtor-" + i,
                     config.obterRiquezaInicialDoProdutor(),
                     mercado,
-                    new ConstantProduction(config.obterProducaoPorProdutor()));
+                    new ConstantProduction(config.obterProducaoPorProdutor()),
+                    consumidores,
+                    config.obterFracaoDeSalarios());
             produtores.add(produtor);
             simulacao.adicionarAgente(produtor);
         }

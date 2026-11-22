@@ -5,6 +5,8 @@ import maoinvisivel.market.strategy.BudgetShareStrategy;
 import maoinvisivel.market.strategy.ConstantProduction;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -101,6 +103,42 @@ class AgentTest {
         // vendeu 4 unidades a preço 10
         assertEquals(40.0, p.obterRiqueza(), TOL);
         assertEquals(960.0, c.obterRiqueza(), TOL);
+    }
+
+    @Test
+    void produtorPagaSalariosDivididosPorIgual() {
+        Market mercado = novoMercado();
+        Consumer c1 = new Consumer("c1", 0, 0, mercado, new BudgetShareStrategy(0.0));
+        Consumer c2 = new Consumer("c2", 0, 0, mercado, new BudgetShareStrategy(0.0));
+        Producer p = new Producer("p1", 100, mercado, new ConstantProduction(0),
+                List.of(c1, c2), 0.5);
+
+        mercado.aoIniciarTick(1);
+        p.agir(1);
+        mercado.aoFinalizarTick(1);
+
+        assertEquals(50.0, p.obterRiqueza(), TOL);
+        assertEquals(25.0, c1.obterRiqueza(), TOL);
+        assertEquals(25.0, c2.obterRiqueza(), TOL);
+    }
+
+    @Test
+    void produtorSemAssalariadosNaoPagaNada() {
+        Market mercado = novoMercado();
+        Producer p = new Producer("p1", 100, mercado, new ConstantProduction(0));
+
+        mercado.aoIniciarTick(1);
+        p.agir(1);
+        mercado.aoFinalizarTick(1);
+
+        assertEquals(100.0, p.obterRiqueza(), TOL);
+    }
+
+    @Test
+    void produtorRejeitaFracaoDeSalariosInvalida() {
+        Market mercado = novoMercado();
+        assertThrows(IllegalArgumentException.class,
+                () -> new Producer("p", 0, mercado, new ConstantProduction(1), List.of(), 1.5));
     }
 
     @Test

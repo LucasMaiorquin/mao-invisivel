@@ -10,8 +10,10 @@ import java.util.Objects;
  * Monta um MarketConfig. Todos os valores têm padrão, então
  * new MarketConfigBuilder().construir() já devolve um cenário válido.
  *
- * Os padrões são calibrados para o preço ficar perto de 10: cada consumidor
- * gasta cerca de 10 por tick, então a demanda é ~100*10/preço e a oferta é 20*5 = 100.
+ * Os padrões formam um ciclo fechado de dinheiro (consumidor -> produtor -> consumidor,
+ * pelos salários), sem renda externa. Foram calibrados medindo a simulação: com 70% da
+ * riqueza paga em salários por tick, o preço se estabiliza perto de 10 e o Gini perto de 0,34.
+ * Com salários menores o preço cai e o Gini sobe; com 0 o dinheiro se acumula nos produtores.
  */
 public class MarketConfigBuilder {
     double precoInicial = 10.0;
@@ -19,10 +21,11 @@ public class MarketConfigBuilder {
     double precoMinimo = 0.01;
     int numeroDeConsumidores = 100;
     int numeroDeProdutores = 20;
-    double riquezaInicialDoConsumidor = 10.0;
-    double rendaDoConsumidor = 10.0;
+    double riquezaInicialDoConsumidor = 20.0;
+    double rendaDoConsumidor = 0.0;
+    double fracaoDeSalarios = 0.7;
     double fracaoDeGasto = 0.5;
-    double riquezaInicialDoProdutor = 0.0;
+    double riquezaInicialDoProdutor = 50.0;
     double producaoPorProdutor = 5.0;
     int ticks = 100;
     long semente = 42L;
@@ -65,6 +68,12 @@ public class MarketConfigBuilder {
 
     public MarketConfigBuilder fracaoDeGasto(double valor) {
         this.fracaoDeGasto = valor;
+        return this;
+    }
+
+    /** Fração da riqueza que cada produtor paga em salários por tick (0 = nunca gasta). */
+    public MarketConfigBuilder fracaoDeSalarios(double valor) {
+        this.fracaoDeSalarios = valor;
         return this;
     }
 
@@ -111,6 +120,9 @@ public class MarketConfigBuilder {
         }
         if (riquezaInicialDoConsumidor < 0 || riquezaInicialDoProdutor < 0) {
             throw new IllegalArgumentException("A riqueza inicial deve ser >= 0");
+        }
+        if (fracaoDeSalarios < 0 || fracaoDeSalarios > 1) {
+            throw new IllegalArgumentException("A fração de salários deve estar entre 0 e 1: " + fracaoDeSalarios);
         }
         if (rendaDoConsumidor < 0) {
             throw new IllegalArgumentException("A renda deve ser >= 0: " + rendaDoConsumidor);

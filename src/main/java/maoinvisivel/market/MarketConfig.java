@@ -13,6 +13,7 @@ public class MarketConfig {
     private final int numeroDeProdutores;
     private final double riquezaInicialDoConsumidor;
     private final double rendaDoConsumidor;
+    private final double fracaoDeSalarios;
     private final double fracaoDeGasto;
     private final double riquezaInicialDoProdutor;
     private final double producaoPorProdutor;
@@ -28,6 +29,7 @@ public class MarketConfig {
         this.numeroDeProdutores = b.numeroDeProdutores;
         this.riquezaInicialDoConsumidor = b.riquezaInicialDoConsumidor;
         this.rendaDoConsumidor = b.rendaDoConsumidor;
+        this.fracaoDeSalarios = b.fracaoDeSalarios;
         this.fracaoDeGasto = b.fracaoDeGasto;
         this.riquezaInicialDoProdutor = b.riquezaInicialDoProdutor;
         this.producaoPorProdutor = b.producaoPorProdutor;
@@ -43,6 +45,7 @@ public class MarketConfig {
     public int obterNumeroDeProdutores() { return numeroDeProdutores; }
     public double obterRiquezaInicialDoConsumidor() { return riquezaInicialDoConsumidor; }
     public double obterRendaDoConsumidor() { return rendaDoConsumidor; }
+    public double obterFracaoDeSalarios() { return fracaoDeSalarios; }
     public double obterFracaoDeGasto() { return fracaoDeGasto; }
     public double obterRiquezaInicialDoProdutor() { return riquezaInicialDoProdutor; }
     public double obterProducaoPorProdutor() { return producaoPorProdutor; }

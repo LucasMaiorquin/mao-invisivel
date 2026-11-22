@@ -106,6 +106,45 @@ class MarketScenarioTest {
     }
 
     @Test
+    void salariosMantemOGiniBaixo() {
+        MarketScenario cenario = fabrica.criar(new MarketConfigBuilder().ticks(300).construir());
+        cenario.rodar();
+
+        double gini = giniFinal(cenario);
+        assertTrue(gini < 0.5, "Gini deveria ficar abaixo de 0.5, foi " + gini);
+    }
+
+    @Test
+    void semSalariosODinheiroSeAcumulaNosProdutores() {
+        MarketScenario cenario = fabrica.criar(new MarketConfigBuilder()
+                .fracaoDeSalarios(0.0).rendaDoConsumidor(10).riquezaInicialDoConsumidor(10)
+                .riquezaInicialDoProdutor(0).ticks(150).construir());
+        cenario.rodar();
+
+        double gini = giniFinal(cenario);
+        assertTrue(gini > 0.7, "Gini deveria passar de 0.7, foi " + gini);
+    }
+
+    @Test
+    void salariosDeixamOPrecoPertoDoEquilibrio() {
+        MarketScenario cenario = fabrica.criar(new MarketConfigBuilder().ticks(300).construir());
+        cenario.rodar();
+        double preco = cenario.mercado().obterPreco();
+        assertTrue(preco > 8 && preco < 13, "preço fora do esperado: " + preco);
+    }
+
+    @Test
+    void builderRejeitaFracaoDeSalariosInvalida() {
+        assertThrows(IllegalArgumentException.class, () -> new MarketConfigBuilder().fracaoDeSalarios(1.1).construir());
+        assertThrows(IllegalArgumentException.class, () -> new MarketConfigBuilder().fracaoDeSalarios(-0.1).construir());
+    }
+
+    private double giniFinal(MarketScenario cenario) {
+        return maoinvisivel.metrics.GiniCalculator.calcular(
+                cenario.todosOsAgentes().stream().map(a -> a.obterRiqueza()).toList());
+    }
+
+    @Test
     void escassezFazOPrecoFicarMaisAltoQueSemChoque() {
         double semChoque = precoFinalComChoque(false);
         double comChoque = precoFinalComChoque(true);
