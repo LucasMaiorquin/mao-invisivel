@@ -90,6 +90,22 @@ class MarketScenarioTest {
     }
 
     @Test
+    void dinheiroEConservadoAlemDaRendaInjetada() {
+        MarketConfig config = new MarketConfigBuilder()
+                .numeroDeConsumidores(30).numeroDeProdutores(5).ticks(100)
+                .adicionarChoque(new ScarcityShock(40, 0.5))
+                .construir();
+        MarketScenario cenario = fabrica.criar(config);
+        double antes = cenario.todosOsAgentes().stream().mapToDouble(a -> a.obterRiqueza()).sum();
+
+        cenario.rodar();
+
+        double depois = cenario.todosOsAgentes().stream().mapToDouble(a -> a.obterRiqueza()).sum();
+        double rendaInjetada = 30 * config.obterRendaDoConsumidor() * 100;
+        assertEquals(antes + rendaInjetada, depois, 1e-6);
+    }
+
+    @Test
     void escassezFazOPrecoFicarMaisAltoQueSemChoque() {
         double semChoque = precoFinalComChoque(false);
         double comChoque = precoFinalComChoque(true);

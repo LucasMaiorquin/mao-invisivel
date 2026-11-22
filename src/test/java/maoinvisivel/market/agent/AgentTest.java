@@ -16,7 +16,24 @@ class AgentTest {
     }
 
     @Test
-    void consumidorRegistraDemandaEGastaORiqueza() {
+    void consumidorRegistraDemandaEPagaPeloQueComprou() {
+        Market mercado = novoMercado();
+        Consumer c = new Consumer("c1", 100, 0, mercado, new BudgetShareStrategy(0.5));
+        Producer p = new Producer("p1", 0, mercado, new ConstantProduction(100));
+
+        mercado.aoIniciarTick(1);
+        c.agir(1);
+        p.agir(1);
+        mercado.aoFinalizarTick(1);
+
+        // quer gastar 50 a preço 10 -> 5 unidades; há oferta de sobra, então compra tudo
+        assertEquals(5.0, mercado.obterUltimaDemanda(), TOL);
+        assertEquals(50.0, c.obterRiqueza(), TOL);
+        assertEquals(50.0, p.obterRiqueza(), TOL);
+    }
+
+    @Test
+    void consumidorSemOfertaNaoPagaNada() {
         Market mercado = novoMercado();
         Consumer c = new Consumer("c1", 100, 0, mercado, new BudgetShareStrategy(0.5));
 
@@ -24,18 +41,19 @@ class AgentTest {
         c.agir(1);
         mercado.aoFinalizarTick(1);
 
-        // gasta 50 a preço 10 -> 5 unidades
         assertEquals(5.0, mercado.obterUltimaDemanda(), TOL);
-        assertEquals(50.0, c.obterRiqueza(), TOL);
+        assertEquals(100.0, c.obterRiqueza(), TOL);
     }
 
     @Test
     void consumidorRecebeRendaAntesDeComprar() {
         Market mercado = novoMercado();
         Consumer c = new Consumer("c1", 0, 20, mercado, new BudgetShareStrategy(1.0));
+        Producer p = new Producer("p1", 0, mercado, new ConstantProduction(100));
 
         mercado.aoIniciarTick(1);
         c.agir(1);
+        p.agir(1);
         mercado.aoFinalizarTick(1);
 
         assertEquals(2.0, mercado.obterUltimaDemanda(), TOL);
@@ -56,7 +74,7 @@ class AgentTest {
     }
 
     @Test
-    void produtorRegistraOfertaERecebeAReceita() {
+    void produtorRegistraOfertaESoRecebePeloQueVendeu() {
         Market mercado = novoMercado();
         Producer p = new Producer("p1", 0, mercado, new ConstantProduction(4));
 
@@ -64,8 +82,25 @@ class AgentTest {
         p.agir(1);
         mercado.aoFinalizarTick(1);
 
+        // sem comprador, nada é vendido
         assertEquals(4.0, mercado.obterUltimaOferta(), TOL);
+        assertEquals(0.0, p.obterRiqueza(), TOL);
+    }
+
+    @Test
+    void produtorVendeTudoQuandoHaDemandaDeSobra() {
+        Market mercado = novoMercado();
+        Producer p = new Producer("p1", 0, mercado, new ConstantProduction(4));
+        Consumer c = new Consumer("c1", 1000, 0, mercado, new BudgetShareStrategy(1.0));
+
+        mercado.aoIniciarTick(1);
+        c.agir(1);
+        p.agir(1);
+        mercado.aoFinalizarTick(1);
+
+        // vendeu 4 unidades a preço 10
         assertEquals(40.0, p.obterRiqueza(), TOL);
+        assertEquals(960.0, c.obterRiqueza(), TOL);
     }
 
     @Test

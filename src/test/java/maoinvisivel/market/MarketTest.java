@@ -105,6 +105,99 @@ public class MarketTest {
         assertEquals(100.0, mercado.obterPreco(), TOLERANCIA);
     }
 
+    // ---------- Liquidação ----------
+
+    private static class Registro implements Liquidavel {
+        double quantidade = -1;
+        double preco = -1;
+
+        @Override
+        public void aoLiquidar(double quantidadeExecutada, double preco) {
+            this.quantidade = quantidadeExecutada;
+            this.preco = preco;
+        }
+    }
+
+    @Test
+    void demandaMaiorQueOfertaRacionaOsCompradores() {
+        Market mercado = novoMercado();
+        Registro comprador1 = new Registro();
+        Registro comprador2 = new Registro();
+        Registro vendedor = new Registro();
+
+        mercado.aoIniciarTick(1);
+        mercado.registrarDemanda(10, comprador1);
+        mercado.registrarDemanda(10, comprador2);
+        mercado.registrarOferta(10, vendedor);
+        mercado.aoFinalizarTick(1);
+
+        // demanda 20, oferta 10: cada comprador executa 50%
+        assertEquals(5.0, comprador1.quantidade, TOLERANCIA);
+        assertEquals(5.0, comprador2.quantidade, TOLERANCIA);
+        assertEquals(10.0, vendedor.quantidade, TOLERANCIA);
+    }
+
+    @Test
+    void ofertaMaiorQueDemandaRacionaOsVendedores() {
+        Market mercado = novoMercado();
+        Registro comprador = new Registro();
+        Registro vendedor1 = new Registro();
+        Registro vendedor2 = new Registro();
+
+        mercado.aoIniciarTick(1);
+        mercado.registrarDemanda(10, comprador);
+        mercado.registrarOferta(15, vendedor1);
+        mercado.registrarOferta(15, vendedor2);
+        mercado.aoFinalizarTick(1);
+
+        assertEquals(10.0, comprador.quantidade, TOLERANCIA);
+        assertEquals(5.0, vendedor1.quantidade, TOLERANCIA);
+        assertEquals(5.0, vendedor2.quantidade, TOLERANCIA);
+    }
+
+    @Test
+    void liquidaAoPrecoDoTickENaoAoPrecoNovo() {
+        Market mercado = novoMercado();
+        Registro comprador = new Registro();
+
+        mercado.aoIniciarTick(1);
+        mercado.registrarDemanda(15, comprador);
+        mercado.registrarOferta(10, new Registro());
+        mercado.aoFinalizarTick(1);
+
+        assertEquals(10.0, comprador.preco, TOLERANCIA);
+        assertEquals(12.5, mercado.obterPreco(), TOLERANCIA);
+    }
+
+    @Test
+    void escassezReduzOQueOProdutorPodeVender() {
+        Market mercado = novoMercado();
+        mercado.reduzirOferta(0.5);
+        Registro comprador = new Registro();
+        Registro vendedor = new Registro();
+
+        mercado.aoIniciarTick(1);
+        mercado.registrarDemanda(10, comprador);
+        mercado.registrarOferta(10, vendedor);
+        mercado.aoFinalizarTick(1);
+
+        // oferta efetiva = 5
+        assertEquals(5.0, vendedor.quantidade, TOLERANCIA);
+        assertEquals(5.0, comprador.quantidade, TOLERANCIA);
+    }
+
+    @Test
+    void semOrdemDeUmDosLadosNaoNegociaNada() {
+        Market mercado = novoMercado();
+        Registro vendedor = new Registro();
+
+        mercado.aoIniciarTick(1);
+        mercado.registrarOferta(10, vendedor);
+        mercado.aoFinalizarTick(1);
+
+        assertEquals(0.0, vendedor.quantidade, TOLERANCIA);
+    }
+
     @Test
     void rejeitaQuantidadeNegativa() {
         Market mercado = novoMercado();

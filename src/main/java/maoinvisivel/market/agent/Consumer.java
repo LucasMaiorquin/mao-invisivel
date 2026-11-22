@@ -1,12 +1,13 @@
 package maoinvisivel.market.agent;
 
+import maoinvisivel.market.Liquidavel;
 import maoinvisivel.market.Market;
 import maoinvisivel.market.strategy.PurchaseStrategy;
 
 import java.util.Objects;
 
-/** Consumidor: a cada tick recebe renda, decide quanto comprar e gasta. */
-public class Consumer extends EconomicAgent {
+/** Consumidor: a cada tick recebe renda, decide quanto comprar e, na liquidação, paga pelo que comprou. */
+public class Consumer extends EconomicAgent implements Liquidavel {
     private final double renda;
     private final PurchaseStrategy estrategia;
 
@@ -30,8 +31,13 @@ public class Consumer extends EconomicAgent {
             return;
         }
 
-        mercado.registrarDemanda(quantidade);
+        // O pagamento só acontece na liquidação, pelo que foi realmente comprado.
+        mercado.registrarDemanda(quantidade, this);
+    }
+
+    @Override
+    public void aoLiquidar(double quantidadeExecutada, double preco) {
         // min() evita estourar a riqueza por erro de arredondamento
-        gastar(Math.min(quantidade * preco, obterRiqueza()));
+        gastar(Math.min(quantidadeExecutada * preco, obterRiqueza()));
     }
 }

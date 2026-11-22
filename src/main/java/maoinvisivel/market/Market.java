@@ -20,6 +20,10 @@ public class Market implements Environment, MarketView{
 
     private final List<Shock> choques = new ArrayList<>();
 
+    private record Ordem(Liquidavel parte, double quantidade) { }
+    private final List<Ordem> ordensDeCompra = new ArrayList<>();
+    private final List<Ordem> ordensDeVenda = new ArrayList<>();
+
     public Market(double precoInicial, double sensibilidade, double precoMinimo) {
         if (precoMinimo <= 0) {
             throw new IllegalArgumentException("O preço mínimo deve ser maior que 0: " + precoMinimo);
@@ -39,7 +43,9 @@ public class Market implements Environment, MarketView{
     public void aoIniciarTick(long tick) {
         demandaAtual = 0;
         ofertaAtual = 0;
-        for (Shock choque : choques) { 
+        ordensDeCompra.clear();
+        ordensDeVenda.clear();
+        for (Shock choque : choques) {
             choque.aplicar(this, tick);
         }
     }
@@ -48,7 +54,27 @@ public class Market implements Environment, MarketView{
     public void aoFinalizarTick(long tick) {
         ultimaDemanda = demandaAtual;
         ultimaOferta = ofertaAtual;
+        liquidar();
         preco = calcularNovoPreco(demandaAtual, ofertaAtual);
+    }
+
+    /**
+     * Liquidação: só se negocia min(demanda, oferta), ao preço do tick.
+     * O lado maior é racionado proporcionalmente: cada ordem executa a mesma fração.
+     */
+    private void liquidar() {
+        double negociado = Math.min(demandaAtual, ofertaAtual);
+        notificar(ordensDeCompra, demandaAtual, negociado);
+        notificar(ordensDeVenda, ofertaAtual, negociado);
+        ordensDeCompra.clear();
+        ordensDeVenda.clear();
+    }
+
+    private void notificar(List<Ordem> ordens, double total, double negociado) {
+        double fracao = total > 0 ? negociado / total : 0.0;
+        for (Ordem ordem : ordens) {
+            ordem.parte().aoLiquidar(ordem.quantidade() * fracao, preco);
+        }
     }
 
     private double calcularNovoPreco(double demanda, double oferta) {
@@ -72,6 +98,18 @@ public class Market implements Environment, MarketView{
     public void registrarOferta(double quantidade) {
         validarQuantidade(quantidade);
         ofertaAtual += quantidade * fatorOferta;
+    }
+
+    /** Demanda com liquidação: a parte será avisada no fim do tick de quanto foi comprado. */
+    public void registrarDemanda(double quantidade, Liquidavel parte) {
+        registrarDemanda(quantidade);
+        ordensDeCompra.add(new Ordem(Objects.requireNonNull(parte, "parte"), quantidade));
+    }
+
+    /** Oferta com liquidação. A quantidade já considera a escassez (fatorOferta). */
+    public void registrarOferta(double quantidade, Liquidavel parte) {
+        registrarOferta(quantidade);
+        ordensDeVenda.add(new Ordem(Objects.requireNonNull(parte, "parte"), quantidade * fatorOferta));
     }
 
     private void validarQuantidade(double quantidade) {

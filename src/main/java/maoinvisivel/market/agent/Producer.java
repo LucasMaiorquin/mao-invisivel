@@ -1,12 +1,13 @@
 package maoinvisivel.market.agent;
 
+import maoinvisivel.market.Liquidavel;
 import maoinvisivel.market.Market;
 import maoinvisivel.market.strategy.ProductionStrategy;
 
 import java.util.Objects;
 
-/** Produtor: a cada tick decide quanto ofertar e recebe a receita ao preço atual. */
-public class Producer extends EconomicAgent {
+/** Produtor: a cada tick decide quanto ofertar e, na liquidação, recebe pelo que vendeu. */
+public class Producer extends EconomicAgent implements Liquidavel {
     private final ProductionStrategy estrategia;
 
     public Producer(String id, double riquezaInicial, Market mercado, ProductionStrategy estrategia) {
@@ -22,7 +23,12 @@ public class Producer extends EconomicAgent {
             return;
         }
 
-        mercado.registrarOferta(quantidade);
-        receber(quantidade * preco);
+        // A receita só chega na liquidação, pelo que foi realmente vendido.
+        mercado.registrarOferta(quantidade, this);
+    }
+
+    @Override
+    public void aoLiquidar(double quantidadeExecutada, double preco) {
+        receber(quantidadeExecutada * preco);
     }
 }
