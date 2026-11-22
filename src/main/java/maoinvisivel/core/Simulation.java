@@ -8,7 +8,7 @@ import java.util.Random;
 
 /**
  * O comandante da simulação
- * Cada chamada de {@link #run(int)} conta os ticks a partir de 1.
+ * Cada chamada de {@link #rodar(int)} conta os ticks a partir de 1.
  * Os agentes agem de forma embaralhada a cada tick. 
  * A mesma seed sempre produz a mesma simulação.
  */
@@ -24,15 +24,15 @@ public class Simulation {
         this.random = Objects.requireNonNull(random, "random");
     }
 
-    public void addAgent(Agent agent) {
+    public void adicionarAgente(Agent agent) {
         agents.add(Objects.requireNonNull(agent, "agent"));
     }
 
-    public void addObserver(SimulationObserver observer) {
+    public void adicionarObservador(SimulationObserver observer) {
         this.observers.add(Objects.requireNonNull(observer, "observer"));
     }
 
-    public void run(int ticks) {
+    public void rodar(int ticks) {
         if (ticks < 0) {
             throw new IllegalArgumentException("Os ticks deve ser >= 0" + ticks);
         }
@@ -42,18 +42,18 @@ public class Simulation {
     }
 
     private void runTick(long tick) {
-        environment.onTickStart(tick);
+        environment.aoIniciarTick(tick);
 
         List<Agent> order = new ArrayList<>(agents);
         Collections.shuffle(order, random);
         for (Agent agent : order) {
-            agent.step(tick);
+            agent.agir(tick);
         }
 
-        environment.onTickEnd(tick);
+        environment.aoFinalizarTick(tick);
 
         for (SimulationObserver observer : observers) {
-            observer.onTickEnd(tick);
+            observer.aoFinalizarTick(tick);
         }
     }
 }

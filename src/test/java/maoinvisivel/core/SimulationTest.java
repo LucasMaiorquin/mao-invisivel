@@ -23,12 +23,12 @@ class SimulationTest {
         }
 
         @Override 
-        public String getId() {
+        public String obterId() {
             return id;
         }
 
         @Override 
-        public void step(long tick) {
+        public void agir(long tick) {
             log.add("step:" + id + ":" + tick );
         }
     }
@@ -41,12 +41,12 @@ class SimulationTest {
         }
 
         @Override
-        public void onTickStart(long tick) {
+        public void aoIniciarTick(long tick) {
             log.add("start:" + tick);
         }    
         
         @Override 
-        public void onTickEnd(long tick) {
+        public void aoFinalizarTick(long tick) {
             log.add("end:" + tick);
         }
     }
@@ -59,7 +59,7 @@ class SimulationTest {
         } 
 
         @Override
-        public void onTickEnd(long tick) {
+        public void aoFinalizarTick(long tick) {
             log.add("observer:" + tick);
         }
     }
@@ -74,10 +74,10 @@ class SimulationTest {
     void chamaTudoUmaVezPorTick() {
         List<String> log = new ArrayList<>();
         Simulation simulation = new Simulation(new FakeEnvironment(log), new Random(1));
-        simulation.addAgent(new FakeAgent("a", log));
-        simulation.addObserver(new FakeObserver(log));
+        simulation.adicionarAgente(new FakeAgent("a", log));
+        simulation.adicionarObservador(new FakeObserver(log));
 
-        simulation.run(5);
+        simulation.rodar(5);
 
         assertEquals(5L, count(log, "start:"));
         assertEquals(5L, count(log, "step:"));
@@ -89,10 +89,10 @@ class SimulationTest {
     void respeitaAOrdemDentroDeUmTick() {
         List<String> log = new ArrayList<>();
         Simulation simulation = new Simulation(new FakeEnvironment(log), new Random(1));
-        simulation.addAgent(new FakeAgent("a", log));
-        simulation.addObserver(new FakeObserver(log));
+        simulation.adicionarAgente(new FakeAgent("a", log));
+        simulation.adicionarObservador(new FakeObserver(log));
 
-        simulation.run(1);
+        simulation.rodar(1);
 
         assertEquals(List.of("start:1", "step:a:1", "end:1", "observer:1"), log);
     }
@@ -101,11 +101,11 @@ class SimulationTest {
     void todosOsAgentesAgemUmaVezPorTick() {
         List<String> log = new ArrayList<>();
         Simulation simulation = new Simulation(new FakeEnvironment(log), new Random(1));
-        simulation.addAgent(new FakeAgent("a", log));
-        simulation.addAgent(new FakeAgent("b", log));
-        simulation.addAgent(new FakeAgent("c", log));
+        simulation.adicionarAgente(new FakeAgent("a", log));
+        simulation.adicionarAgente(new FakeAgent("b", log));
+        simulation.adicionarAgente(new FakeAgent("c", log));
 
-        simulation.run(1);
+        simulation.rodar(1);
 
         assertEquals(1L, count(log, "step:a:"));
         assertEquals(1L, count(log, "step:b:"));
@@ -116,10 +116,10 @@ class SimulationTest {
     void rodarZeroTicksNaoFazNada() {
         List<String> log = new ArrayList<>();
         Simulation simulation = new Simulation(new FakeEnvironment(log), new Random(1));
-        simulation.addAgent(new FakeAgent("a", log));
-        simulation.addObserver(new FakeObserver(log));
+        simulation.adicionarAgente(new FakeAgent("a", log));
+        simulation.adicionarObservador(new FakeObserver(log));
 
-        simulation.run(0);
+        simulation.rodar(0);
 
         assertTrue(log.isEmpty());
     }
@@ -128,14 +128,14 @@ class SimulationTest {
     void ticksNegativosLancamExcecao() {
         Simulation simulation = new Simulation(new FakeEnvironment(new ArrayList<>()), new Random(1));
 
-        assertThrows(IllegalArgumentException.class, () -> simulation.run(-1));
+        assertThrows(IllegalArgumentException.class, () -> simulation.rodar(-1));
     }
 
     @Test
     void naoAceitaAgenteNulo() {
         Simulation simulation = new Simulation(new FakeEnvironment(new ArrayList<>()), new Random(1));
 
-        assertThrows(NullPointerException.class, () -> simulation.addAgent(null));
+        assertThrows(NullPointerException.class, () -> simulation.adicionarAgente(null));
     }
 
     @Test
@@ -150,9 +150,9 @@ class SimulationTest {
         List<String> log = new ArrayList<>();
         Simulation simulation = new Simulation(new FakeEnvironment(new ArrayList<>()), new Random(seed));
         for (int i = 0; i < 10; i++) {
-            simulation.addAgent(new FakeAgent("agente" + i, log));
+            simulation.adicionarAgente(new FakeAgent("agente" + i, log));
         }
-        simulation.run(20);
+        simulation.rodar(20);
         return log;
     }
 }
